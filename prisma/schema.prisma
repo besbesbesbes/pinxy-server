@@ -31,8 +31,6 @@ model User {
   reportsMade     ReportUser[]   @relation("reportedBy")
   reportsOnPosts  ReportPost[]
   reportUser      ReportUser[]
-
-  @@map("users")
 }
 
 enum UserRole {
@@ -49,7 +47,6 @@ model Relationship {
   following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@unique([followerId, followingId]) // Unique relationship
-  @@map("relationships")
 }
 
 model Post {
@@ -71,14 +68,12 @@ model Post {
   votes    VotePost[]
   images   ImagePost[]
   reports  ReportPost[]
-
-  @@map("posts")
 }
 
 enum PostCategory {
   ALERT
-  NEWSEVENT
-  MARKETPLACE
+  NEWS
+  SHOP
   JOB
   OTHER
 }
@@ -98,7 +93,7 @@ model ImagePost {
   imageUrl  String   @map("image_url")
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  @@map("image_posts")
+  @@map("image_post")
 }
 
 model Comment {
@@ -112,8 +107,6 @@ model Comment {
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   votes VoteComment[]
-
-  @@map("comments")
 }
 
 model VotePost {
@@ -126,7 +119,7 @@ model VotePost {
   post      Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId]) // Unique vote per user for each post
-  @@map("vote_posts")
+  @@map("vote_post")
 }
 
 model VoteComment {
@@ -139,7 +132,7 @@ model VoteComment {
   comment   Comment    @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   @@unique([userId, commentId]) // Unique vote per user for each comment
-  @@map("vote_comments")
+  @@map("vote_comment")
 }
 
 enum VoteStatus {
@@ -159,7 +152,7 @@ model ReportUser {
 
   reasons ReportUserReason[]
 
-  @@map("report_users")
+  @@map("report_user")
 }
 
 model ReportUserReason {
@@ -170,7 +163,7 @@ model ReportUserReason {
   content   String
   report    ReportUser @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
-  @@map("report_user_reasons")
+  @@map("report_user_reason")
 }
 
 model ReportPost {
@@ -185,7 +178,7 @@ model ReportPost {
 
   reasons ReportPostReason[]
 
-  @@map("report_posts")
+  @@map("report_post")
 }
 
 model ReportPostReason {
@@ -196,5 +189,5 @@ model ReportPostReason {
   content   String
   report    ReportPost @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
-  @@map("report_post_reasons")
+  @@map("report_post_reason")
 }
