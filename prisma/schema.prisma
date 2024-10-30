@@ -1,14 +1,187 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
 
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+model User {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  name        String   @unique
+  displayName String?
+  email       String   @unique
+  password    String
+  imageUrl    String?
+  bio         String?
+  role        UserRole @default(USER)
+  isBanned    Boolean  @default(false)
+  locationLat Float?
+  locationLng Float?
+
+  posts           Post[]
+  comments        Comment[]
+  votesOnPosts    VotePost[]
+  votesOnComments VoteComment[]
+  follower        Relationship[] @relation("follower")
+  following       Relationship[] @relation("following")
+  reportsMade     ReportUser[]   @relation("reportedBy")
+  reportsOnPosts  ReportPost[]
+  reportUser      ReportUser[]
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model Relationship {
+  id          Int                @id @default(autoincrement())
+  createdAt   DateTime           @default(now())
+  followerId  Int
+  followingId Int
+  status      RelationshipStatus
+  follower    User               @relation("follower", fields: [followerId], references: [id])
+  following   User               @relation("following", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId]) // Unique relationship
+}
+
+enum RelationshipStatus {
+  FOLLOWER
+  FOLLOWING
+}
+
+model Post {
+  id             Int          @id @default(autoincrement())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  userId         Int
+  content        String
+  category       PostCategory
+  locationTitle  String
+  locationLat    Float
+  locationLng    Float
+  expirationDate DateTime
+  isAIReviewed   Boolean      @default(false)
+  status         PostStatus
+  user           User         @relation(fields: [userId], references: [id])
+
+  comments Comment[]
+  votes    VotePost[]
+  images   ImagePost[]
+  reports  ReportPost[]
+}
+
+enum PostCategory {
+  ALERT
+  NEWSEVENT
+  MARKETPLACE
+  JOB
+  OTHER
+}
+
+enum PostStatus {
+  READY
+  WAITING
+  REJECTED
+  BANNED
+}
+
+model ImagePost {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  postId    Int
+  imageUrl  String
+  post      Post     @relation(fields: [postId], references: [id])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    Int
+  postId    Int
+  content   String
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
+
+  votes VoteComment[]
+}
+
+model VotePost {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  userId    Int
+  postId    Int
+  status    VoteStatus
+  user      User       @relation(fields: [userId], references: [id])
+  post      Post       @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId]) // Unique vote per user for each post
+}
+
+model VoteComment {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  userId    Int
+  commentId Int
+  status    VoteStatus
+  user      User       @relation(fields: [userId], references: [id])
+  comment   Comment    @relation(fields: [commentId], references: [id])
+
+  @@unique([userId, commentId]) // Unique vote per user for each comment
+}
+
+enum VoteStatus {
+  UP
+  DOWN
+}
+
+model ReportUser {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  reporterId Int
+  reportedId Int
+  reportTime DateTime
+  reporter   User     @relation("reportedBy", fields: [reporterId], references: [id])
+  reported   User     @relation(fields: [reportedId], references: [id])
+
+  reasons ReportUserReason[]
+}
+
+model ReportUserReason {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  reportId  Int
+  content   String
+  report    ReportUser @relation(fields: [reportId], references: [id])
+}
+
+model ReportPost {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     Int
+  postId     Int
+  reportTime DateTime
+  user       User     @relation(fields: [userId], references: [id])
+  post       Post     @relation(fields: [postId], references: [id])
+
+  reasons ReportPostReason[]
+}
+
+model ReportPostReason {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  reportId  Int
+  content   String
+  report    ReportPost @relation(fields: [reportId], references: [id])
 }
