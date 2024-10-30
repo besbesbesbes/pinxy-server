@@ -1,14 +1,193 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
 
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+model User {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  name        String   @unique
+  displayName String?  @map("display_name") // Necessary mapping
+  email       String   @unique
+  password    String
+  imageUrl    String?  @map("image_url") // Necessary mapping
+  bio         String?
+  role        UserRole @default(USER)
+  isBanned    Boolean  @default(false) @map("is_banned") // Necessary mapping
+  locationLat Float?   @map("location_lat") // Necessary mapping
+  locationLng Float?   @map("location_lng") // Necessary mapping
+
+  posts           Post[]
+  comments        Comment[]
+  votesOnPosts    VotePost[]
+  votesOnComments VoteComment[]
+  follower        Relationship[] @relation("follower")
+  following       Relationship[] @relation("following")
+  reportsMade     ReportUser[]   @relation("reportedBy")
+  reportsOnPosts  ReportPost[]
+  reportUser      ReportUser[]
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model Relationship {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  followerId  Int      @map("follower_id")
+  followingId Int      @map("following_id")
+  follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId]) // Unique relationship
+}
+
+model Post {
+  id             Int          @id @default(autoincrement())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  userId         Int          @map("user_id")
+  content        String
+  category       PostCategory
+  locationTitle  String       @map("location_title")
+  locationLat    Float        @map("location_lat")
+  locationLng    Float        @map("location_lng")
+  expirationDate DateTime     @map("expiration_date")
+  isAIReviewed   Boolean      @default(false) @map("is_ai_reviewed")
+  status         PostStatus
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  comments Comment[]
+  votes    VotePost[]
+  images   ImagePost[]
+  reports  ReportPost[]
+}
+
+enum PostCategory {
+  ALERT
+  NEWS
+  SHOP
+  JOB
+  OTHER
+}
+
+enum PostStatus {
+  READY
+  WAITING
+  REJECTED
+  BANNED
+}
+
+model ImagePost {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  postId    Int      @map("post_id")
+  imageUrl  String   @map("image_url")
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("image_post")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    Int      @map("user_id")
+  postId    Int      @map("post_id")
+  content   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  votes VoteComment[]
+}
+
+model VotePost {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  userId    Int        @map("user_id")
+  postId    Int        @map("post_id")
+  status    VoteStatus
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId]) // Unique vote per user for each post
+  @@map("vote_post")
+}
+
+model VoteComment {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  userId    Int        @map("user_id")
+  commentId Int        @map("comment_id")
+  status    VoteStatus
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   Comment    @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId]) // Unique vote per user for each comment
+  @@map("vote_comment")
+}
+
+enum VoteStatus {
+  UP
+  DOWN
+}
+
+model ReportUser {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  reporterId Int      @map("reporter_id")
+  reportedId Int      @map("reported_id")
+  reportTime DateTime @map("report_time")
+  reporter   User     @relation("reportedBy", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported   User     @relation(fields: [reportedId], references: [id], onDelete: Cascade)
+
+  reasons ReportUserReason[]
+
+  @@map("report_user")
+}
+
+model ReportUserReason {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  reportId  Int        @map("report_id")
+  content   String
+  report    ReportUser @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@map("report_user_reason")
+}
+
+model ReportPost {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     Int      @map("user_id")
+  postId     Int      @map("post_id")
+  reportTime DateTime @map("report_time")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  reasons ReportPostReason[]
+
+  @@map("report_post")
+}
+
+model ReportPostReason {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  reportId  Int        @map("report_id")
+  content   String
+  report    ReportPost @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@map("report_post_reason")
 }
