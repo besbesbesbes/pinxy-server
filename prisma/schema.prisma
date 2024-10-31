@@ -9,8 +9,8 @@ generator client {
 
 model User {
   id          Int      @id @default(autoincrement())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
   name        String   @unique
   displayName String?  @map("display_name") // Necessary mapping
   email       String   @unique
@@ -28,9 +28,11 @@ model User {
   votesOnComments VoteComment[]
   follower        Relationship[] @relation("follower")
   following       Relationship[] @relation("following")
-  reportsMade     ReportUser[]   @relation("reportedBy")
+  UserAsReporter  ReportUser[]   @relation("UserAsReporter")
+  UserAsReported  ReportUser[]   @relation("UserAsReported")
   reportsOnPosts  ReportPost[]
-  reportUser      ReportUser[]
+
+  @@map("user")
 }
 
 enum UserRole {
@@ -40,19 +42,20 @@ enum UserRole {
 
 model Relationship {
   id          Int      @id @default(autoincrement())
-  createdAt   DateTime @default(now())
+  createdAt   DateTime @default(now()) @map("created_at")
   followerId  Int      @map("follower_id")
   followingId Int      @map("following_id")
   follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
   following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@unique([followerId, followingId]) // Unique relationship
+  @@map("relationship")
 }
 
 model Post {
   id             Int          @id @default(autoincrement())
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
   userId         Int          @map("user_id")
   content        String
   category       PostCategory
@@ -68,6 +71,8 @@ model Post {
   votes    VotePost[]
   images   ImagePost[]
   reports  ReportPost[]
+
+  @@map("post")
 }
 
 enum PostCategory {
@@ -87,8 +92,8 @@ enum PostStatus {
 
 model ImagePost {
   id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   postId    Int      @map("post_id")
   imageUrl  String   @map("image_url")
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -98,8 +103,8 @@ model ImagePost {
 
 model Comment {
   id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   userId    Int      @map("user_id")
   postId    Int      @map("post_id")
   content   String
@@ -107,11 +112,13 @@ model Comment {
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   votes VoteComment[]
+
+  @@map("comment")
 }
 
 model VotePost {
   id        Int        @id @default(autoincrement())
-  createdAt DateTime   @default(now())
+  createdAt DateTime   @default(now()) @map("created_at")
   userId    Int        @map("user_id")
   postId    Int        @map("post_id")
   status    VoteStatus
@@ -124,7 +131,7 @@ model VotePost {
 
 model VoteComment {
   id        Int        @id @default(autoincrement())
-  createdAt DateTime   @default(now())
+  createdAt DateTime   @default(now()) @map("created_at")
   userId    Int        @map("user_id")
   commentId Int        @map("comment_id")
   status    VoteStatus
@@ -141,53 +148,51 @@ enum VoteStatus {
 }
 
 model ReportUser {
-  id         Int      @id @default(autoincrement())
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  reporterId Int      @map("reporter_id")
-  reportedId Int      @map("reported_id")
-  reportTime DateTime @map("report_time")
-  reporter   User     @relation("reportedBy", fields: [reporterId], references: [id], onDelete: Cascade)
-  reported   User     @relation(fields: [reportedId], references: [id], onDelete: Cascade)
-
-  reasons ReportUserReason[]
+  id                 Int              @id @default(autoincrement())
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+  reporterId         Int              @map("reporter_id")
+  reportedId         Int              @map("reported_id")
+  reportTime         DateTime         @map("report_time")
+  reporter           User             @relation("UserAsReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported           User             @relation("UserAsReported", fields: [reportedId], references: [id], onDelete: Cascade)
+  reportUserReasonId Int              @map("report_user_reason_id")
+  reportUserReason   ReportUserReason @relation(fields: [reportUserReasonId], references: [id], onDelete: Cascade)
 
   @@map("report_user")
 }
 
 model ReportUserReason {
-  id        Int        @id @default(autoincrement())
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  reportId  Int        @map("report_id")
-  content   String
-  report    ReportUser @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  id         Int          @id @default(autoincrement())
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+  content    String
+  ReportUser ReportUser[]
 
   @@map("report_user_reason")
 }
 
 model ReportPost {
-  id         Int      @id @default(autoincrement())
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  userId     Int      @map("user_id")
-  postId     Int      @map("post_id")
-  reportTime DateTime @map("report_time")
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-
-  reasons ReportPostReason[]
+  id                 Int              @id @default(autoincrement())
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+  userId             Int              @map("user_id")
+  postId             Int              @map("post_id")
+  reportTime         DateTime         @map("report_time")
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post               Post             @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reportPostReasonId Int              @map("report_post_reason_id")
+  reportPostReason   ReportPostReason @relation(fields: [reportPostReasonId], references: [id], onDelete: Cascade)
 
   @@map("report_post")
 }
 
 model ReportPostReason {
-  id        Int        @id @default(autoincrement())
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  reportId  Int        @map("report_id")
-  content   String
-  report    ReportPost @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  id         Int          @id @default(autoincrement())
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+  content    String
+  ReportPost ReportPost[]
 
   @@map("report_post_reason")
 }
