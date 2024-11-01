@@ -12,11 +12,8 @@ app.use(cors());
 app.use(express.json());
 
 //routing
-<<<<<<< HEAD
 app.use("/api/auth", authRoute)
-=======
 app.use("/api/search", searchRouter);
->>>>>>> dev
 app.use(notFound);
 app.use(errorMiddleware);
 
