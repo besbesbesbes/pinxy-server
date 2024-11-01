@@ -1,11 +1,10 @@
 const createError = require("../utils/createError");
-const prisma = require("../config/prisma");
+const prisma = require("../models");
 const getNearbyLandmarks = require("../functions/calculate");
 
 exports.search = async (req, res, next) => {
   try {
-    const { current_location_lat, current_location_lng, distance } =
-      req.body;
+    const { current_location_lat, current_location_lng, distance } = req.body;
 
     if (!current_location_lat || !current_location_lng || !distance) {
       return createError(400, "All fields are required");
@@ -36,19 +35,10 @@ exports.search = async (req, res, next) => {
 
 exports.searchValue = async (req, res, next) => {
   try {
-    const {
-      current_location_lat,
-      current_location_lng,
-      distance,
-      value,
-    } = req.body;
+    const { current_location_lat, current_location_lng, distance, value } =
+      req.body;
 
-    if (
-      !current_location_lat ||
-      !current_location_lng ||
-      !distance ||
-      !value
-    ) {
+    if (!current_location_lat || !current_location_lng || !distance || !value) {
       return createError(400, "All fields are required");
     }
 
@@ -83,12 +73,8 @@ exports.searchValue = async (req, res, next) => {
 
 exports.searchCategory = async (req, res, next) => {
   try {
-    const {
-      current_location_lat,
-      current_location_lng,
-      distance,
-      category,
-    } = req.body;
+    const { current_location_lat, current_location_lng, distance, category } =
+      req.body;
 
     if (
       !current_location_lat ||
@@ -127,12 +113,8 @@ exports.searchCategory = async (req, res, next) => {
 
 exports.searchPostByUserId = async (req, res, next) => {
   try {
-    const {
-      current_location_lat,
-      current_location_lng,
-      distance,
-      userId,
-    } = req.body;
+    const { current_location_lat, current_location_lng, distance, userId } =
+      req.body;
 
     if (
       !current_location_lat ||
