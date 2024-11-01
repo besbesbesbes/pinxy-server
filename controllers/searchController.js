@@ -174,6 +174,8 @@ exports.searchUser = async (req, res, next) => {
     const { displayName } = req.body;
     const users = await prisma.user.findMany({
       where: {
+        isBanned: false,
+        role: "USER",
         displayName: {
           contains: displayName,
         },
