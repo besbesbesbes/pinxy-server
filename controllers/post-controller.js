@@ -97,6 +97,108 @@ module.exports.getPost = tryCatch(async (req, res, next) => {
   };
   res.json({ msg: "Get post sucessful...", resPost, user });
 });
+module.exports.deletePost = tryCatch(async (req, res, next) => {
+  const userId = req.user.id;
+  const { postId } = req.body;
+  const post = await prisma.post.findUnique({
+    where: {
+      id: postId,
+    },
+  });
+  if (!post) {
+    createError(400, "Post not found!");
+  }
+  if (post.userId !== userId) {
+    createError(401, "Unauthorized!");
+  }
+  await prisma.post.delete({
+    where: {
+      id: postId,
+    },
+  });
+  res.json({ msg: "Delete post sucessful..." });
+});
+module.exports.editPost = tryCatch(async (req, res, next) => {
+  const userId = req.user.id;
+  const { postId, txt, cat, drt, lat, lng, imagesToDelete } = req.body;
+  // validation
+  if (!txt || !lat || !lng || !drt || !cat) {
+    createError(400, "Post info should be provided");
+  }
+  const endTime = new Date(Date.now() + drt * 60 * 60 * 1000);
+  const expirationDate = endTime.toISOString();
+  const post = await prisma.post.findUnique({
+    where: {
+      id: +postId,
+    },
+  });
+  if (!post) {
+    createError(400, "Post not found!");
+  }
+  if (post.userId !== userId) {
+    createError(401, "Unauthorized!");
+  }
+  // edit post
+  const updatedPost = await prisma.post.update({
+    where: {
+      id: +postId,
+    },
+    data: {
+      content: txt,
+      category: cat,
+      locationLat: +lat,
+      locationLng: +lng,
+      expirationDate,
+    },
+  });
+  // Delete images
+  if (imagesToDelete) {
+    const imagesToDelete_arr = imagesToDelete.split(",").map(Number);
+    if (imagesToDelete_arr.length > 0) {
+      for (const el of imagesToDelete_arr) {
+        const img = await prisma.imagePost.delete({
+          where: {
+            id: el,
+          },
+        });
+        if (img?.imageUrl) {
+          await cloudinary.uploader.destroy(getPublicId(img.imageUrl));
+        }
+      }
+    }
+  }
+  // upload to cloundinary
+  const haveFiles = !!req.files;
+  let uploadResults = [];
+  if (haveFiles) {
+    for (const file of req.files) {
+      try {
+        const uploadResult = await cloudinary.uploader.upload(file.path, {
+          overwrite: true,
+          public_id: path.parse(file.path).name,
+          folder: "Pinxy/test",
+          width: 500,
+          height: 500,
+          crop: "limit",
+        });
+        uploadResults.push(uploadResult.secure_url);
+        fs.unlink(file.path);
+      } catch (err) {
+        return next(createError(500, "Fail to upload image"));
+      }
+    }
+  }
+  // create post pictures
+  for (const rs of uploadResults) {
+    await prisma.imagePost.create({
+      data: {
+        postId: +postId,
+        imageUrl: rs,
+      },
+    });
+  }
+  res.json({ msg: "Edit post sucessful..." });
+});
 module.exports.newPostUser = tryCatch(async (req, res, next) => {
   const userId = req.user.id;
   const user = await prisma.user.findUnique({
