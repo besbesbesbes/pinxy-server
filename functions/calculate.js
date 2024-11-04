@@ -19,7 +19,11 @@ async function getNearbyLandmarks(posts, currentLat, currentLng, dist) {
         category: location.category,
         createdAt: location.createdAt,
         userId: location.userId,
+        name: location.user.name,
         displayName: location.user.displayName,
+        email: location.user.email,
+        imageUrl: location.user.imageUrl,
+        bio: location.user.bio,
       })
     )
   );
@@ -34,8 +38,14 @@ async function getNearbyLandmarks(posts, currentLat, currentLng, dist) {
       content: feature.properties.content,
       category: feature.properties.category,
       createdAt: feature.properties.createdAt,
-      userId: feature.properties.userId,
-      displayName: feature.properties.displayName,
+      user: {
+        userId: feature.properties.userId,
+        name: feature.properties.name,
+        displayName: feature.properties.displayName,
+        email: feature.properties.email,
+        imageUrl: feature.properties.imageUrl,
+        bio: feature.properties.bio,
+      },
       coordinates: feature.geometry.coordinates,
       distance: distance,
     };

@@ -158,6 +158,10 @@ exports.searchValue = async (req, res, next) => {
       return createError(400, "sort must be distance, createdAt, or upVote");
     }
 
+    if (value.trim() === "") {
+      return createError(400, "value cannot be empty");
+    }
+
     if (sort === "distance") {
       const allPostByValue = await prisma.post.findMany({
         where: {
