@@ -1,15 +1,16 @@
 const bcrypt = require("bcryptjs")
 const prisma = require("../models/index")
+const jwt = require("jsonwebtoken")
 const createError = require('../utils/createError')
 
 exports.register = async (req, res, next) => {
-
+    console.log(req.body)
     try {
-        const { userName, email, password, conFirmPassword } = req.body
+        const { name, email, password, confirmPassword } = req.body
 
         const isUser = await prisma.user.findUnique({
             where: {
-                name: userName
+                name: name
             }
         })
 
@@ -32,7 +33,7 @@ exports.register = async (req, res, next) => {
         console.log(hashedPassword)
         const newUser = await prisma.user.create({
             data: {
-                name: userName,
+                name: name,
                 email: email,
                 password: hashedPassword
             }
@@ -46,26 +47,39 @@ exports.register = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
     try {
-        const { userName, email, password } = req.body
+        const { input, password, roleInput } = req.body;
+        console.log(req.body);
 
-        const user = await prisma.user.findUnique({
-            where: { email: email }
-        })
+        let user;
+
+        if (roleInput) {
+            user = await prisma.user.findUnique({
+                where: { email: input }
+            });
+        } else {
+            user = await prisma.user.findUnique({
+                where: { name: input }
+            });
+        }
+
         if (!user) {
-            return res.status(400).json({ message: "This email and password invalid." })
+            return res.status(400).json({ message: "This USERNAME/EMAIL and password are invalid." });
         }
-        const isMatch = await bcrypt.compare(password, user.password)
-        if (!isMatch) {
-            return res.status(400).json({ message: "This email and password invalid." })
-        }
-        const payload = {
-            email: user.email,
-            userId: user.id,
-            role: user.role,
-        }
-        const token = jwt.sign(payload, process.env.SECRET, { expiresIn: "1d" })
-        res.json({ payload, token })
 
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: "This USERNAME/EMAIL and password are invalid." });
+        }
+
+        const payload = {
+            name: user.name,
+            id: user.id,
+            role: user.role,
+            isBanned: user.isBanned,
+        };
+
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
+        res.json({ payload, token });
     } catch (err) {
         next(err)
     }
