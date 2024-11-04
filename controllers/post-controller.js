@@ -5,6 +5,12 @@ const cloudinary = require("../config/cloundinary");
 const fs = require("fs/promises");
 const getPublicId = require("../utils/getPublicId");
 const path = require("path");
+const axios = require("axios");
+require("dotenv").config();
+const OpenAI = require("openai");
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 module.exports.getPost = tryCatch(async (req, res, next) => {
   const userId = req.user.id;
@@ -138,19 +144,15 @@ module.exports.editPost = tryCatch(async (req, res, next) => {
   if (post.userId !== userId) {
     createError(401, "Unauthorized!");
   }
-  // edit post
-  const updatedPost = await prisma.post.update({
-    where: {
-      id: +postId,
-    },
-    data: {
-      content: txt,
-      category: cat,
-      locationLat: +lat,
-      locationLng: +lng,
-      expirationDate,
-    },
+  //moderations
+  const moderation = await openai.moderations.create({
+    model: "omni-moderation-latest",
+    input: txt,
   });
+  if (moderation.results[0].flagged) {
+    createError(400, "Your post contents not pass our violation policy.");
+  }
+
   // Delete images
   if (imagesToDelete) {
     const imagesToDelete_arr = imagesToDelete.split(",").map(Number);
@@ -188,6 +190,44 @@ module.exports.editPost = tryCatch(async (req, res, next) => {
       }
     }
   }
+  // moderation pictures
+  let notPassPolicy = false;
+  for (const rs of uploadResults) {
+    const moderation = await openai.moderations.create({
+      model: "omni-moderation-latest",
+      input: [
+        {
+          type: "image_url",
+          image_url: {
+            url: rs,
+          },
+        },
+      ],
+    });
+    if (moderation.results[0].flagged) {
+      notPassPolicy = true;
+    }
+  }
+  if (notPassPolicy) {
+    for (const rs of uploadResults) {
+      console.log(rs);
+      await cloudinary.uploader.destroy(getPublicId(rs));
+    }
+    createError(400, "Your post contents not pass our violation policy.");
+  }
+  // edit post
+  const updatedPost = await prisma.post.update({
+    where: {
+      id: +postId,
+    },
+    data: {
+      content: txt,
+      category: cat,
+      locationLat: +lat,
+      locationLng: +lng,
+      expirationDate,
+    },
+  });
   // create post pictures
   for (const rs of uploadResults) {
     await prisma.imagePost.create({
@@ -217,6 +257,15 @@ module.exports.newPost = tryCatch(async (req, res, next) => {
   if (!txt || !lat || !lng || !drt || !cat) {
     createError(400, "Post infor should be provided");
   }
+  //moderations
+  const moderation = await openai.moderations.create({
+    model: "omni-moderation-latest",
+    input: txt,
+  });
+  console.log(moderation);
+  if (moderation.results[0].flagged) {
+    createError(400, "Your post contents not pass our violation policy.");
+  }
   //upload to cloundinary
   const haveFiles = !!req.files;
   let uploadResults = [];
@@ -237,6 +286,31 @@ module.exports.newPost = tryCatch(async (req, res, next) => {
         return next(createError(500, "Fail to upload image"));
       }
     }
+  }
+  // moderation pictures
+  let notPassPolicy = false;
+  for (const rs of uploadResults) {
+    const moderation = await openai.moderations.create({
+      model: "omni-moderation-latest",
+      input: [
+        {
+          type: "image_url",
+          image_url: {
+            url: rs,
+          },
+        },
+      ],
+    });
+    if (moderation.results[0].flagged) {
+      notPassPolicy = true;
+    }
+  }
+  if (notPassPolicy) {
+    for (const rs of uploadResults) {
+      console.log(rs);
+      await cloudinary.uploader.destroy(getPublicId(rs));
+    }
+    createError(400, "Your post contents not pass our violation policy.");
   }
   // create new post
   const post = await prisma.post.create({
@@ -369,6 +443,15 @@ module.exports.getComment = tryCatch(async (req, res, next) => {
 module.exports.addComment = tryCatch(async (req, res, next) => {
   const userId = req.user.id;
   const { postId, commentTxt } = req.body;
+  //moderations
+  const moderation = await openai.moderations.create({
+    model: "omni-moderation-latest",
+    input: commentTxt,
+  });
+  if (moderation.results[0].flagged) {
+    createError(400, "Your comment not pass our violation policy.");
+  }
+  // create comment
   await prisma.comment.create({
     data: {
       userId,
@@ -416,6 +499,14 @@ module.exports.editComment = tryCatch(async (req, res, next) => {
   }
   if (comment.userId !== userId) {
     createError(401, "Unauthorized!");
+  }
+  //moderations
+  const moderation = await openai.moderations.create({
+    model: "omni-moderation-latest",
+    input: commentTxt,
+  });
+  if (moderation.results[0].flagged) {
+    createError(400, "Your comment not pass our violation policy.");
   }
   //update comment
   await prisma.comment.update({
