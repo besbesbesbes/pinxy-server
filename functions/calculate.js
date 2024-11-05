@@ -14,16 +14,17 @@ async function getNearbyLandmarks(posts, currentLat, currentLng, dist) {
   const points = turf.featureCollection(
     posts.map((location) =>
       turf.point([location.locationLng, location.locationLat], {
-        title: location.locationTitle,
-        content: location.content,
-        category: location.category,
-        createdAt: location.createdAt,
-        userId: location.userId,
-        name: location.user.name,
-        displayName: location.user.displayName,
-        email: location.user.email,
-        imageUrl: location.user.imageUrl,
-        bio: location.user.bio,
+        id: location.id,
+        // title: location.locationTitle,
+        // content: location.content,
+        // category: location.category,
+        // createdAt: location.createdAt,
+        // userId: location.userId,
+        // name: location.user.name,
+        // displayName: location.user.displayName,
+        // email: location.user.email,
+        // imageUrl: location.user.imageUrl,
+        // bio: location.user.bio,
       })
     )
   );
@@ -34,19 +35,20 @@ async function getNearbyLandmarks(posts, currentLat, currentLng, dist) {
   const result = pointsWithinBuffer.features.map((feature) => {
     const distance = turf.distance(userPoint, feature, { units: "meters" });
     return {
-      title: feature.properties.title,
-      content: feature.properties.content,
-      category: feature.properties.category,
-      createdAt: feature.properties.createdAt,
-      user: {
-        userId: feature.properties.userId,
-        name: feature.properties.name,
-        displayName: feature.properties.displayName,
-        email: feature.properties.email,
-        imageUrl: feature.properties.imageUrl,
-        bio: feature.properties.bio,
-      },
-      coordinates: feature.geometry.coordinates,
+      postId: feature.properties.id,
+      // title: feature.properties.title,
+      // content: feature.properties.content,
+      // category: feature.properties.category,
+      // createdAt: feature.properties.createdAt,
+      // user: {
+      //   userId: feature.properties.userId,
+      //   name: feature.properties.name,
+      //   displayName: feature.properties.displayName,
+      //   email: feature.properties.email,
+      //   imageUrl: feature.properties.imageUrl,
+      //   bio: feature.properties.bio,
+      // },
+      // coordinates: feature.geometry.coordinates,
       distance: distance,
     };
   });
