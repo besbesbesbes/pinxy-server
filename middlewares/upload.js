@@ -5,7 +5,8 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) =>
     cb(null, path.join(__dirname, "../upload-pic")),
   filename: (req, file, cb) => {
-    const { id } = req.user;
+    const id = 1; //<------------dummy
+    // const { id } = req.user;
     const fullFilename = `${id}_${Date.now()}_${Math.round(
       Math.random() * 1000
     )}${path.extname(file.originalname)}`;
