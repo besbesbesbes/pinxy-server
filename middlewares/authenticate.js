@@ -14,8 +14,9 @@ exports.authenticate = async (req, res, next) => {
             return createError(401, "Unauthorized")
         }
         const payload = jwt.verify(token, process.env.JWT_SECRET)
+        console.log("payload111", payload)
 
-        const foundUser = await prisma.user.findUnique({ where: { email: payload.email } })
+        const foundUser = await prisma.user.findUnique({ where: { id: payload.id } })
         if (!foundUser) {
             return createError(401, "Unauthorized")
         }
