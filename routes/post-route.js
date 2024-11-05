@@ -1,7 +1,7 @@
 const express = require("express");
 const postRoute = express.Router();
 const postController = require("../controllers/post-controller");
-const authenticate = require("../middlewares/authenticate");
+const { authenticate } = require("../middlewares/authenticate");
 const upload = require("../middlewares/upload");
 
 postRoute.post("/", authenticate, postController.getPost);

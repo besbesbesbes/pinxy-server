@@ -3,13 +3,13 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const searchRouter = require("./routes/searchRoute");
-const notFound = require("./middlewares/not-found");
-const errorMiddleware = require("./middlewares/error");
 const postRoute = require("./routes/post-route");
 const authRoute = require("./routes/auth-route");
 const adminRoute = require("./routes/admin");
 const aiRoute = require("./routes/ai-route");
 const userRoute = require("./routes/userRoute");
+const notFound = require("./middlewares/not-found");
+const errorMiddleware = require("./middlewares/error");
 
 //middleware
 app.use(cors());
