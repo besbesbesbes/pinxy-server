@@ -16,8 +16,8 @@ async function getNearbyLandmarks(posts, currentLat, currentLng, dist) {
       turf.point([location.locationLng, location.locationLat], {
         id: location.id,
         // title: location.locationTitle,
-        // content: location.content,
-        // category: location.category,
+        content: location.content,
+        category: location.category,
         // createdAt: location.createdAt,
         // userId: location.userId,
         // name: location.user.name,
@@ -25,6 +25,8 @@ async function getNearbyLandmarks(posts, currentLat, currentLng, dist) {
         // email: location.user.email,
         // imageUrl: location.user.imageUrl,
         // bio: location.user.bio,
+        locationLat: location.locationLat,
+        locationLng: location.locationLng,
       })
     )
   );
@@ -37,8 +39,8 @@ async function getNearbyLandmarks(posts, currentLat, currentLng, dist) {
     return {
       postId: feature.properties.id,
       // title: feature.properties.title,
-      // content: feature.properties.content,
-      // category: feature.properties.category,
+      content: feature.properties.content,
+      category: feature.properties.category,
       // createdAt: feature.properties.createdAt,
       // user: {
       //   userId: feature.properties.userId,
@@ -50,6 +52,8 @@ async function getNearbyLandmarks(posts, currentLat, currentLng, dist) {
       // },
       // coordinates: feature.geometry.coordinates,
       distance: distance,
+      locationLat: feature.properties.locationLat,
+      locationLng: feature.properties.locationLng,
     };
   });
 
