@@ -15,11 +15,11 @@ module.exports.getAiSummary = tryCatch(async (req, res, next) => {
   }
   const input = postForAI.join(", ");
   const resp = await openai.chat.completions.create({
-    model: "gpt-4",
+    model: "gpt-3.5-turbo",
     messages: [
       {
         role: "user",
-        content: `Please summarize the following bulleted in thai not over 5 lines text:\n\n${input}`,
+        content: `Please summarize the following text in english and thai which should not over 10 lines each and make result like someone telling you about what happened around you text:\n\n${input}`,
       },
     ],
   });

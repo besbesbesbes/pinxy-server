@@ -17,7 +17,11 @@ async function getNearbyLandmarks(posts, currentLat, currentLng, dist) {
         id: location.id,
         // title: location.locationTitle,
         content: location.content,
+<<<<<<< HEAD
+        // category: location.category,
+=======
         category: location.category,
+>>>>>>> dev
         // createdAt: location.createdAt,
         // userId: location.userId,
         // name: location.user.name,
@@ -40,7 +44,11 @@ async function getNearbyLandmarks(posts, currentLat, currentLng, dist) {
       postId: feature.properties.id,
       // title: feature.properties.title,
       content: feature.properties.content,
+<<<<<<< HEAD
+      // category: feature.properties.category,
+=======
       category: feature.properties.category,
+>>>>>>> dev
       // createdAt: feature.properties.createdAt,
       // user: {
       //   userId: feature.properties.userId,
