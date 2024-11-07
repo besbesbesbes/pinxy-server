@@ -16,7 +16,7 @@ async function getNearbyLandmarks(posts, currentLat, currentLng, dist) {
       turf.point([location.locationLng, location.locationLat], {
         id: location.id,
         // title: location.locationTitle,
-        // content: location.content,
+        content: location.content,
         // category: location.category,
         // createdAt: location.createdAt,
         // userId: location.userId,
@@ -37,7 +37,7 @@ async function getNearbyLandmarks(posts, currentLat, currentLng, dist) {
     return {
       postId: feature.properties.id,
       // title: feature.properties.title,
-      // content: feature.properties.content,
+      content: feature.properties.content,
       // category: feature.properties.category,
       // createdAt: feature.properties.createdAt,
       // user: {
