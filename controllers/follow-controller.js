@@ -57,7 +57,7 @@ exports.unfollow = async (req, res, next) => {
   try {
     const { userId, followingId } = req.body;
 
-    // เช็คว่าไม่สามารถ follow ตัวเองได้
+    // เช็คว่าไม่สามารถ unfollow ตัวเองได้
     if (userId === followingId) {
       return createError(400, "You cannot follow yourself.");
     }
