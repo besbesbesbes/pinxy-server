@@ -2,6 +2,11 @@ const bcrypt = require("bcryptjs")
 const prisma = require("../models/index")
 const jwt = require("jsonwebtoken")
 const createError = require('../utils/createError')
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+require('dotenv').config();
+
+
 
 exports.register = async (req, res, next) => {
     console.log(req.body)
@@ -35,7 +40,8 @@ exports.register = async (req, res, next) => {
             data: {
                 name: name,
                 email: email,
-                password: hashedPassword
+                password: hashedPassword,
+                imageUrl: "https://res.cloudinary.com/dxb7wja7n/image/upload/v1730886216/Pinxy/test/1_1730886213622_847.png",
             }
         })
         res.json({ message: "Register success." })
@@ -53,18 +59,26 @@ exports.login = async (req, res, next) => {
         let user;
 
         if (roleInput) {
-            user = await prisma.user.findUnique({
-                where: { email: input }
-            });
+            rs = await prisma.$queryRaw`
+                SELECT * FROM user
+                WHERE LOWER(email) = LOWER(${input})
+                LIMIT 1
+            `;
+
+            user = { ...rs[0] }
         } else {
             user = await prisma.user.findUnique({
                 where: { name: input }
             });
         }
 
+        console.log("user111", user)
+
         if (!user) {
             return res.status(400).json({ message: "This USERNAME/EMAIL and password are invalid." });
         }
+        console.log('password', password)
+        console.log('user.password', user.password)
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
@@ -80,7 +94,66 @@ exports.login = async (req, res, next) => {
 
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
         res.json({ payload, token });
+        // res.json({ mes: "test" })
     } catch (err) {
         next(err)
     }
 }
+
+exports.loginGoogle = async (req, res, next) => {
+    try {
+        const { token } = req.body;
+        const ticket = await client.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const payloadFromGoogle = ticket.getPayload();
+        const password = payloadFromGoogle['sub'];
+        const email = payloadFromGoogle['email'];
+        const name = payloadFromGoogle['name'];
+        const displayName = payloadFromGoogle['given_name'];
+
+        let user = await prisma.user.findFirst({
+            where: {
+                name: name
+            }
+        })
+
+        if (!user) {
+            await prisma.user.create({
+                data: {
+                    password: password,
+                    email: email,
+                    name: name,
+                    displayName: displayName,
+                }
+            })
+        } else {
+            await prisma.user.update({
+                where: {
+                    email: email
+                },
+                data: {
+                    name: name,
+                    displayName: displayName,
+                }
+
+            })
+        }
+
+        const payload = {
+            name: user.name,
+            id: user.id,
+            role: user.role,
+            isBanned: user.isBanned,
+        };
+
+        const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
+        res.json({ payload, accessToken });
+
+    } catch (error) {
+        console.error('Error verifying token:', error);
+        res.status(401).send('Invalid token');
+    }
+};
