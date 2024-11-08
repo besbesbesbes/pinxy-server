@@ -9,6 +9,8 @@ router.get("/:id", UserController.getProfileData)
 router.patch("/update-info", UserController.changeProfileData)
 router.patch("/update-password", UserController.changePassword)
 router.patch("/update-profile-pic", authenticate, upload.single("image"), UserController.changeProfilePicture)
+router.post("/send-reset", UserController.checkResetPasswordData)
+router.patch("/reset-password", UserController.resetPassword)
 
 
 module.exports = router
