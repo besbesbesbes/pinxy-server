@@ -40,7 +40,8 @@ exports.register = async (req, res, next) => {
             data: {
                 name: name,
                 email: email,
-                password: hashedPassword
+                password: hashedPassword,
+                imageUrl: "https://res.cloudinary.com/dxb7wja7n/image/upload/v1730886216/Pinxy/test/1_1730886213622_847.png",
             }
         })
         res.json({ message: "Register success." })
@@ -58,24 +59,26 @@ exports.login = async (req, res, next) => {
         let user;
 
         if (roleInput) {
-            user = await prisma.user.findUnique({
-                where: {
+            rs = await prisma.$queryRaw`
+                SELECT * FROM user
+                WHERE LOWER(email) = LOWER(${input})
+                LIMIT 1
+            `;
 
-                    email: { equals: input.toLowerCase(), mode: "insensitive" }
-
-                }
-            });
+            user = { ...rs[0] }
         } else {
             user = await prisma.user.findUnique({
                 where: { name: input }
             });
         }
 
-        console.log("user", user)
+        console.log("user111", user)
 
         if (!user) {
             return res.status(400).json({ message: "This USERNAME/EMAIL and password are invalid." });
         }
+        console.log('password', password)
+        console.log('user.password', user.password)
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
@@ -91,6 +94,7 @@ exports.login = async (req, res, next) => {
 
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
         res.json({ payload, token });
+        // res.json({ mes: "test" })
     } catch (err) {
         next(err)
     }
