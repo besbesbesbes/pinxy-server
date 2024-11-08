@@ -114,43 +114,53 @@ exports.loginGoogle = async (req, res, next) => {
         const name = payloadFromGoogle['name'];
         const displayName = payloadFromGoogle['given_name'];
 
-        let user = await prisma.user.findFirst({
+
+        let user;
+
+        //check if user exist
+
+        user = await prisma.user.findFirst({
             where: {
                 name: name
             }
         })
 
         if (!user) {
-            await prisma.user.create({
+            user = await prisma.user.create({
                 data: {
                     password: password,
                     email: email,
                     name: name,
                     displayName: displayName,
+                    imageUrl: "https://res.cloudinary.com/dxb7wja7n/image/upload/v1730886216/Pinxy/test/1_1730886213622_847.png",
+                    bio: `Hello ${name}, you can change your bio by edit and confirm`
                 }
-            })
-        } else {
-            await prisma.user.update({
-                where: {
-                    email: email
-                },
-                data: {
-                    name: name,
-                    displayName: displayName,
-                }
-
             })
         }
+
+        // else {
+        //     await prisma.user.update({
+        //         where: {
+        //             email: email
+        //         },
+        //         data: {
+        //             name: name,
+        //             displayName: displayName,
+        //         }
+
+        //     })
+        // }
 
         const payload = {
             name: user.name,
             id: user.id,
             role: user.role,
             isBanned: user.isBanned,
+            displayName: user.displayName
         };
 
         const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
-        res.json({ payload, accessToken });
+        res.json({ payload, token: accessToken });
 
     } catch (error) {
         console.error('Error verifying token:', error);
