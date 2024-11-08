@@ -15,11 +15,11 @@ module.exports.getAiSummary = tryCatch(async (req, res, next) => {
   }
   const input = postForAI.join(", ");
   const resp = await openai.chat.completions.create({
-    model: "gpt-4",
+    model: "gpt-3.5-turbo",
     messages: [
       {
         role: "user",
-        content: `Please summarize the following bulleted in thai not over 5 lines text:\n\n${input}`,
+        content: `Please summarize the following text in english and thai which should not over 10 lines each and make result like someone telling you about what happened around you and also add recommendation about how to handel or live in this situation text:\n\n${input}`,
       },
     ],
   });
@@ -46,4 +46,16 @@ module.exports.getSentiment = tryCatch(async (req, res, next) => {
   const sentiment = resp.choices[0].message.content.trim();
   console.log(`Emotion: ${sentiment}`);
   res.json({ msg: "Get sentiment sucessful...", sentiment });
+});
+
+module.exports.getAskme = tryCatch(async (req, res, next) => {
+  const { chats } = req.body;
+  // console.log(chats);
+  const response = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo",
+    messages: chats,
+  });
+  const content = response.choices[0].message.content.trim();
+  console.log(`Content: ${content}`);
+  res.json({ msg: "Get ask me sucessful...", content });
 });

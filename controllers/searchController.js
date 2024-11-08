@@ -555,3 +555,29 @@ exports.searchUser = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.searchFollowing = async (req, res, next) => {
+  try {
+    const { userId } = req.body;
+    const following = await prisma.user.findMany({
+      where: {
+        following: {
+          some: {
+            followerId: userId,
+          },
+        },
+        isBanned: false,
+        role: "USER",
+      },
+      select: {
+        id: true,
+        name: true,
+        displayName: true,
+        imageUrl: true,
+      },
+    });
+    res.status(200).json({ following });
+  } catch (err) {
+    next(err);
+  }
+};
