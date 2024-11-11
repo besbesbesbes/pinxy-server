@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const { authenticate } = require("../middlewares/authenticate");
 const {
   search,
   searchValue,
@@ -8,11 +9,11 @@ const {
   searchFollowing,
 } = require("../controllers/searchController");
 
-router.post("/", search);
-router.post("/val", searchValue);
-router.post("/category", searchCategory);
-router.post("/user", searchPostByUserId);
-router.post("/following", searchUser);
-router.post("/following-list", searchFollowing);
+router.post("/", authenticate, search);
+router.post("/val", authenticate, searchValue);
+router.post("/category", authenticate, searchCategory);
+router.post("/user", authenticate, searchPostByUserId);
+router.post("/following", authenticate, searchUser);
+router.post("/following-list", authenticate, searchFollowing);
 
 module.exports = router;
