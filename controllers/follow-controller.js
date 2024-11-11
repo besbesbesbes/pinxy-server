@@ -4,7 +4,7 @@ const prisma = require("../models");
 exports.follow = async (req, res, next) => {
   try {
     const { userId, followingId } = req.body;
-
+    console.log(userId, followingId);
     // เช็คว่าไม่สามารถ follow ตัวเองได้
     if (userId === followingId) {
       return createError(400, "You cannot follow yourself.");
@@ -102,6 +102,25 @@ exports.unfollow = async (req, res, next) => {
     });
 
     res.status(200).json({ msg: "Unfollow successful." });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getUserInfo = async (req, res, next) => {
+  try {
+    const { userId, followingId } = req.body;
+    const follow = await prisma.relationship.findFirst({
+      where: {
+        followerId: userId,
+        followingId: followingId,
+      },
+    });
+    let isFollow = false;
+    if (follow) {
+      isFollow = true;
+    }
+    res.status(200).json({ msg: "Unfollow successful.", isFollow });
   } catch (err) {
     next(err);
   }
