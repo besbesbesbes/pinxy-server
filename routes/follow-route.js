@@ -1,8 +1,8 @@
 const router = require("express").Router();
 const {
-  follow,
-  unfollow,
-  getUserInfo,
+    follow,
+    unfollow,
+    getUserInfo,
 } = require("../controllers/follow-controller");
 
 router.post("/", follow);

@@ -1,7 +1,7 @@
 const express = require('express')
 const { adminSearchPost, adminSearchUser, adminBanUser, adminUnbanUser, adminBanPost, adminUnbanPost, adminApprovePost, adminRejectPost, adminSearchBanUser, adminSearchWaitApprove, adminSeachRejectedPost, adminSearchBanPost, adminSearchReportUser, adminSearchReportPost } = require('../controllers/admin')
 const adminRoute = express.Router()
-
+const { authenticate } = require('../middlewares/authenticate')
 
 
 
@@ -9,19 +9,19 @@ const adminRoute = express.Router()
 
 
 
-adminRoute.post('/search/post',adminSearchPost)
-adminRoute.post('/search/user',adminSearchUser)
-adminRoute.post('/ban/user/:id',adminBanUser)
-adminRoute.post('/unban/user/:id',adminUnbanUser)
-adminRoute.post('/ban/post/:id',adminBanPost)
-adminRoute.post('/unban/post/:id',adminUnbanPost)
-adminRoute.post('/approve/post/:id',adminApprovePost)
-adminRoute.post('/reject/post/:id',adminRejectPost)
-adminRoute.post('/searchBanUser', adminSearchBanUser)
-adminRoute.post('/searchBanPost',adminSearchBanPost)
-adminRoute.post('/searchWaitApprove',adminSearchWaitApprove)
-adminRoute.post('/searchRejectedPost',adminSeachRejectedPost)
-adminRoute.post('/searchReportUser',adminSearchReportUser)
-adminRoute.post('/searchReportPost',adminSearchReportPost)
+adminRoute.post('/search/post', authenticate, adminSearchPost)
+adminRoute.post('/search/user', authenticate, adminSearchUser)
+adminRoute.post('/ban/user/:id', authenticate, adminBanUser)
+adminRoute.post('/unban/user/:id', authenticate, adminUnbanUser)
+adminRoute.post('/ban/post/:id', authenticate, adminBanPost)
+adminRoute.post('/unban/post/:id', authenticate, adminUnbanPost)
+adminRoute.post('/approve/post/:id', authenticate, adminApprovePost)
+adminRoute.post('/reject/post/:id', authenticate, adminRejectPost)
+adminRoute.post('/searchBanUser', authenticate, adminSearchBanUser)
+adminRoute.post('/searchBanPost', authenticate, adminSearchBanPost)
+adminRoute.post('/searchWaitApprove', authenticate, adminSearchWaitApprove)
+adminRoute.post('/searchRejectedPost', authenticate, adminSeachRejectedPost)
+adminRoute.post('/searchReportUser', authenticate, adminSearchReportUser)
+adminRoute.post('/searchReportPost', authenticate, adminSearchReportPost)
 
 module.exports = adminRoute
